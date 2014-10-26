@@ -6,9 +6,7 @@ from libc.stdlib cimport free
 from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
 cimport fcl_defs as defs
-cimport octomap_defs
 import inspect
-import numpy as np
 import transform as tf
 from collision_data import *
 cimport numpy as np
@@ -38,18 +36,18 @@ cdef class DistanceFunction:
         self.py_func = py_func
         self.py_args = py_args
 
-    cdef bool eval_func(self, defs.CollisionObject* o1, defs.CollisionObject* o2, double& dist):
+    cdef bool eval_func(self, defs.CollisionObject* o1, defs.CollisionObject* o2, defs.FCL_REAL& dist):
         cdef object py_r = defs.PyObject_CallObject(self.py_func,
                                                     (copy_ptr_collision_object(o1),
                                                      copy_ptr_collision_object(o2),
                                                      self.py_args))
-        dist = <double?>py_r[1]
+        (&dist)[0] = <defs.FCL_REAL?>py_r[1]
         return <bool?>py_r[0]
 
 cdef inline bool CollisionCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata):
     return (<CollisionFunction>cdata).eval_func(o1, o2)
 
-cdef inline bool DistanceCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata, double& dist):
+cdef inline bool DistanceCallBack(defs.CollisionObject* o1, defs.CollisionObject* o2, void* cdata, defs.FCL_REAL& dist):
     return (<DistanceFunction>cdata).eval_func(o1, o2, dist)
 
 cdef vec3f_to_tuple(defs.Vec3f vec):
@@ -146,32 +144,32 @@ cdef class ShapeBase(CollisionGeometry):
     def __cinit__(self):
         pass
 
-cdef class Triangle2(ShapeBase):
+cdef class TriangleP(ShapeBase):
     def __cinit__(self, a, b, c):
-        self.thisptr = new defs.Triangle2(defs.Vec3f(<double?>a[0], <double?>a[1], <double?>a[2]),
+        self.thisptr = new defs.TriangleP(defs.Vec3f(<double?>a[0], <double?>a[1], <double?>a[2]),
                                           defs.Vec3f(<double?>b[0], <double?>b[1], <double?>b[2]),
                                           defs.Vec3f(<double?>c[0], <double?>c[1], <double?>c[2]))
     property a:
         def __get__(self):
-            return vec3f_to_tuple((<defs.Triangle2*>self.thisptr).a)
+            return vec3f_to_tuple((<defs.TriangleP*>self.thisptr).a)
         def __set__(self, value):
-            (<defs.Triangle2*>self.thisptr).a[0] = <double?>value[0]
-            (<defs.Triangle2*>self.thisptr).a[1] = <double?>value[1]
-            (<defs.Triangle2*>self.thisptr).a[2] = <double?>value[2]
+            (<defs.TriangleP*>self.thisptr).a[0] = <double?>value[0]
+            (<defs.TriangleP*>self.thisptr).a[1] = <double?>value[1]
+            (<defs.TriangleP*>self.thisptr).a[2] = <double?>value[2]
     property b:
         def __get__(self):
-            return vec3f_to_tuple((<defs.Triangle2*>self.thisptr).b)
+            return vec3f_to_tuple((<defs.TriangleP*>self.thisptr).b)
         def __set__(self, value):
-            (<defs.Triangle2*>self.thisptr).b[0] = <double?>value[0]
-            (<defs.Triangle2*>self.thisptr).b[1] = <double?>value[1]
-            (<defs.Triangle2*>self.thisptr).b[2] = <double?>value[2]
+            (<defs.TriangleP*>self.thisptr).b[0] = <double?>value[0]
+            (<defs.TriangleP*>self.thisptr).b[1] = <double?>value[1]
+            (<defs.TriangleP*>self.thisptr).b[2] = <double?>value[2]
     property c:
         def __get__(self):
-            return vec3f_to_tuple((<defs.Triangle2*>self.thisptr).c)
+            return vec3f_to_tuple((<defs.TriangleP*>self.thisptr).c)
         def __set__(self, value):
-            (<defs.Triangle2*>self.thisptr).c[0] = <double?>value[0]
-            (<defs.Triangle2*>self.thisptr).c[1] = <double?>value[1]
-            (<defs.Triangle2*>self.thisptr).c[2] = <double?>value[2]
+            (<defs.TriangleP*>self.thisptr).c[0] = <double?>value[0]
+            (<defs.TriangleP*>self.thisptr).c[1] = <double?>value[1]
+            (<defs.TriangleP*>self.thisptr).c[2] = <double?>value[2]
 
 cdef class Box(ShapeBase):
     def __cinit__(self, x, y, z):
@@ -288,7 +286,7 @@ cdef class DynamicAABBTreeCollisionManager:
     cdef vector[defs.PyObject*]* objs
     def __cinit__(self):
         self.thisptr = new defs.DynamicAABBTreeCollisionManager()
-        self.objs = new vector[defs.PyObject*]()
+        self.objs = new vector[defs.PyObject*   ]()
     def __dealloc__(self):
         if self.thisptr:
             del self.thisptr
@@ -314,17 +312,20 @@ cdef class DynamicAABBTreeCollisionManager:
             self.thisptr.collide((<CollisionObject?>args[0]).thisptr, <void*>fn, CollisionCallBack)
         else:
             raise ValueError
+
     def distance(self, *args):
         if len(args) == 2 and inspect.isfunction(args[1]):
             fn = DistanceFunction(args[1], args[0])
-            self.thisptr.distance(<void*>fn, DistanceCallBack)
+            self.thisptr.distance(<void*> fn, DistanceCallBack)
         elif len(args) == 3 and inspect.isfunction(args[2]):
             fn = DistanceFunction(args[2], args[1])
-            self.thisptr.distance((<CollisionObject?>args[0]).thisptr, <void*>fn, DistanceCallBack)
+            self.thisptr.distance((<CollisionObject?> args[0]).thisptr, <void*> fn, DistanceCallBack)
         else:
             raise ValueError
+
     def setup(self):
         self.thisptr.setup()
+
     def update(self, arg=None):
         cdef vector[defs.CollisionObject*] objs
         if hasattr(arg, "__len__"):
@@ -399,8 +400,8 @@ cdef c_to_python_collision_geometry(defs.const_CollisionGeometry* geom):
         memcpy(obj.thisptr, geom, sizeof(defs.Cylinder))
         return obj
     elif geom.getNodeType() == defs.GEOM_TRIANGLE:
-        obj = Triangle2(np.zeros(3), np.zeros(3), np.zeros(3))
-        memcpy(obj.thisptr, geom, sizeof(defs.Triangle2))
+        obj = TriangleP(np.zeros(3), np.zeros(3), np.zeros(3))
+        memcpy(obj.thisptr, geom, sizeof(defs.TriangleP))
         return obj
     elif geom.getNodeType() == defs.GEOM_HALFSPACE:
         obj = Halfspace(np.zeros(3), 0)
