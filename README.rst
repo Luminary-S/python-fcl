@@ -22,3 +22,10 @@ Install
 You can install python-fcl using the normal distutils install command:
 
     $ python setup.py install
+
+Dependencies
+-------------
+
+* cython
+* fcl >= 0.2.9
+
