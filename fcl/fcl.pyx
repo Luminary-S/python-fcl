@@ -2,6 +2,7 @@
 from libcpp cimport bool
 from libcpp.string cimport string
 from libcpp.vector cimport vector
+from libcpp.memory cimport shared_ptr
 from libc.stdlib cimport free
 from libc.string cimport memcpy
 from cython.operator cimport dereference as deref, preincrement as inc, address
@@ -69,7 +70,7 @@ cdef class CollisionObject:
         self._no_instance = _no_instance
         if not geom.getNodeType() is None:
             if not tf is None:
-                self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr),
+                self.thisptr = new defs.CollisionObject(shared_ptr[defs.CollisionGeometry](geom.thisptr),
                                                         defs.Transform3f(defs.Quaternion3f(<double?>tf.q.w,
                                                                                            <double?>tf.q.x,
                                                                                            <double?>tf.q.y,
@@ -78,7 +79,7 @@ cdef class CollisionObject:
                                                                                     <double?>tf.t[1],
                                                                                     <double?>tf.t[2])))
             else:
-                self.thisptr = new defs.CollisionObject(defs.shared_ptr[defs.CollisionGeometry](geom.thisptr))
+                self.thisptr = new defs.CollisionObject(shared_ptr[defs.CollisionGeometry](geom.thisptr))
         else:
             if not self._no_instance:
                 raise ValueError

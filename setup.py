@@ -1,6 +1,7 @@
 import os
 import sys
 from distutils.core import Extension, setup
+import numpy
 from Cython.Distutils import build_ext
 
 platform_supported = False
@@ -35,11 +36,12 @@ setup(
     ext_modules=[Extension(
         "fcl.fcl",
         ["fcl/fcl.pyx"],
-        include_dirs = include_dirs,
+        include_dirs = include_dirs + [numpy.get_include()],
         library_dirs = lib_dirs,
         libraries=[
                 "fcl"
                 ],
+        extra_compile_args=['-std=c++11'],
         language="c++")],
     cmdclass={'build_ext': build_ext},
     )

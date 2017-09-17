@@ -27,5 +27,5 @@ Dependencies
 -------------
 
 * cython
-* fcl >= 0.2.9
+* fcl >= 0.5
 
