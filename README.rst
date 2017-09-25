@@ -1,6 +1,9 @@
 python-fcl
 =========
 
+.. image:: https://travis-ci.org/neka-nat/python-fcl.svg?branch=master
+    :target: https://travis-ci.org/neka-nat/python-fcl
+
 About
 -----
 This library is a Python binding of FCL library.
