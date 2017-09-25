@@ -26,6 +26,7 @@ You can install python-fcl using the normal distutils install command:
 Dependencies
 -------------
 
-* cython
+* numpy
+* cython == 0.25
 * fcl >= 0.5
 

@@ -1,0 +1,28 @@
+language: python
+python:
+  - 2.7
+install:
+  - sudo pip install numpy
+  - sudo pip install 'cython==0.25'
+  - git clone https://github.com/danfis/libccd.git libccd
+  - cd libccd
+  - git checkout v2.0
+  - mkdir build && cd build
+  - cmake -G "Unix Makefiles" ..
+  - sudo make install
+  - cd ../..
+  - git clone https://github.com/flexible-collision-library/fcl.git fcl_cpp
+  - cd fcl_cpp
+  - git checkout 0.5.0
+  - mkdir build
+  - cd build
+  - cmake ..
+  - sudo make install
+  - cd ../..
+before_script:
+  - export PYTHONPATH=$PYTHONPATH:$(pwd):/usr/local/lib/python2.7/dist-packages/
+  - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
+script:
+  - sudo python setup.py install
+  - cd test
+  - python -m unittest fcl_unit_test.Test_FCL
