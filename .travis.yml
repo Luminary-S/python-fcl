@@ -2,7 +2,7 @@ language: python
 python:
   - 2.7
 install:
-  - sudo pip install numpy
+  - sudo apt-get install python-numpy
   - sudo pip install 'cython==0.25'
   - git clone https://github.com/danfis/libccd.git libccd
   - cd libccd
@@ -20,9 +20,9 @@ install:
   - sudo make install
   - cd ../..
 before_script:
-  - export PYTHONPATH=$PYTHONPATH:$(pwd):/usr/local/lib/python2.7/dist-packages/
+  - export PYTHONPATH=$PYTHONPATH:/usr/local/lib/python2.7/dist-packages/
   - export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
 script:
   - sudo python setup.py install
-#  - cd test
-#  - python -m unittest fcl_unit_test.Test_FCL
+  - cd test
+  - python -m unittest fcl_unit_test.Test_FCL
